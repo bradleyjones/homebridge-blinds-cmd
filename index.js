@@ -1,7 +1,7 @@
 var request = require("request");
 var exec = require("child_process").exec;
 var Service, Characteristic;
-var BlindsCMDDebug = 0;
+var BlindsCMDDebug = 1;
 
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
@@ -108,7 +108,7 @@ BlindsCMDAccessory.prototype.setTargetPosition = function(pos, callback) {
         const moveUp = ((this.currentTargetPosition != 0) && (this.currentTargetPosition >= lPos));
         this.log((moveUp ? "Moving up" : "Moving down"));
 
-        this.cmdRequest(moveUp, (moveUp ? this.upCMD : this.downCMD), function(error, stdout, stderr) {
+        this.cmdRequest(moveUp, pos, (moveUp ? this.upCMD : this.downCMD), function(error, stdout, stderr) {
           if (error) {
     	    this.log('Move function failed: %s', stderr);
 	    callback(error);
@@ -147,12 +147,12 @@ BlindsCMDAccessory.prototype.lastState = function(callback) {
   }
 }
 
-BlindsCMDAccessory.prototype.cmdRequest = function(moveUp, cmd, callback) {
+BlindsCMDAccessory.prototype.cmdRequest = function(moveUp, pos, cmd, callback) {
   this.currentPositionState = (moveUp ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING);
   this.service
     .setCharacteristic(Characteristic.PositionState, (moveUp ? Characteristic.PositionState.INCREASING : Characteristic.PositionState.DECREASING));
 
-  exec(cmd, function(error, stdout, stderr) {
+  exec(cmd + " " + pos, function(error, stdout, stderr) {
     callback(error, stdout, stderr)
   });
 }
